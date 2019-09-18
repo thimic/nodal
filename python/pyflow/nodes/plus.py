@@ -7,9 +7,10 @@ from pyflow.core.nodes import BaseNode
 class Plus(BaseNode):
 
     _input_types = {
-        0: [int, float]
+        -1: [int, float]
     }
     _output_type = float
+    _max_inputs = -1
 
     def __init__(self, value=0):
         super(Plus, self).__init__()

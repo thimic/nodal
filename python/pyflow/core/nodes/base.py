@@ -4,16 +4,15 @@
 from abc import ABCMeta, abstractmethod
 
 from pyflow.core import Callbacks
-from pyflow.core.exceptions import MaxInputsExceededException
 from pyflow import graph_utils
 
 
 class BaseNode(metaclass=ABCMeta):
 
     _input_types = {
-        0: [type]
+        0: [object]
     }
-    _output_type = type
+    _output_type = object
     _max_inputs = 1
 
     def __init__(self):
@@ -51,6 +50,18 @@ class BaseNode(metaclass=ABCMeta):
         self._attrs['name'] = value
 
     @property
+    def input_types(self):
+        return self._input_types
+
+    @property
+    def output_type(self):
+        return self._output_type
+
+    @property
+    def max_inputs(self):
+        return self._max_inputs
+
+    @property
     def attrs(self):
         return self._attrs
 
@@ -79,9 +90,8 @@ class BaseNode(metaclass=ABCMeta):
         return self._inputs[index]
 
     def set_input(self, index, node):
-        # Verify Index
-        if index + 1 > self._max_inputs:
-            raise MaxInputsExceededException
+        # Verify connection
+        graph_utils.verify_connection(self, index, node)
 
         # About to change node connections. Node is dirty!
         self._dirty = True
@@ -94,7 +104,6 @@ class BaseNode(metaclass=ABCMeta):
             return True
 
         # Plug set input to node
-        graph_utils.verify_connection(self, node)
         self._inputs[index] = node
         node.dependents.append(self)
         return True

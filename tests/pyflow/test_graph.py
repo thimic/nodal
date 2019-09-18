@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 from unittest import skip, TestCase
 
 import pyflow
@@ -7,7 +9,6 @@ from pyflow import Graph
 from pyflow.core import Callbacks
 
 
-# -*- coding: utf-8 -*-
 class TestGraph(TestCase):
 
     def setUp(self):

@@ -2,16 +2,31 @@
 # -*- coding: utf-8 -*-
 
 
-class CyclicDependencyException(BaseException):
+class PyFlowException(BaseException):
 
     pass
 
 
-class MaxInputsExceededException(BaseException):
+class NodeConnectionException(PyFlowException):
 
     pass
 
 
-class NodeClassNotFoundException(BaseException):
+class CyclicDependencyException(NodeConnectionException):
+
+    pass
+
+
+class NodeTypeMismatchException(NodeConnectionException):
+
+    pass
+
+
+class MaxInputsExceededException(NodeConnectionException):
+
+    pass
+
+
+class NodeClassNotFoundException(PyFlowException):
 
     pass

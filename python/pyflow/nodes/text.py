@@ -6,6 +6,11 @@ from pyflow.core.nodes import BaseNode
 
 class Text(BaseNode):
 
+    _input_types = {
+        0: [str]
+    }
+    _output_type = str
+
     def __init__(self, text=''):
         super(Text, self).__init__()
         self._attrs = {'name': None, 'text': text}
