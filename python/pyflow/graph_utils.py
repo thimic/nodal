@@ -92,6 +92,8 @@ def verify_connection(node, input_idx, input_node):
         CyclicDependencyException: When verification fails
 
     """
+    if input_node is None:
+        return
     verify_input_index(node, input_idx)
     verify_type_match(node, input_idx, input_node)
     verify_dependencies(node, input_node)

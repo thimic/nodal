@@ -14,7 +14,7 @@ class Plus(BaseNode):
 
     def __init__(self, value=0):
         super(Plus, self).__init__()
-        _attrs = {'name': None, 'value': value}
+        self._attrs = {'name': None, 'value': value}
         self._result = 0
 
     @property
@@ -29,7 +29,8 @@ class Plus(BaseNode):
         self._dirty = True
 
     def _execute(self):
-        if self.has_input(0):
-            self._result = self.value + self.input(0).result
-        else:
-            self._result = self.value
+        self._result = self.value
+        for index, input_node in self.inputs.items():
+            if input_node:
+                self._result += input_node.result
+
