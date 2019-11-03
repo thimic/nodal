@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import weakref
+
+from pyflow.core.exceptions import MaxInputsExceededException
+
 from abc import ABCMeta, abstractmethod
 
 from pyflow.core import Callbacks
@@ -25,6 +29,14 @@ class BaseNode(metaclass=ABCMeta):
 
         Callbacks.trigger_on_create(self)
 
+    def __del__(self):
+        """
+        Class destructor. Called when the node is garbage collected. Time of
+        garbage collection cannot be predicted with certainty, so this method is
+        only implemented as a last resort. Use self.delete() for node deletion.
+        """
+        Callbacks.trigger_on_destroy(self)
+
     def __repr__(self):
         return f'<{self.class_}(name={self.name!r}) at 0x{id(self):x}>'
 
@@ -36,6 +48,10 @@ class BaseNode(metaclass=ABCMeta):
             [self.attrs[a] == other.attrs.get(a) for a in self.attrs]
         )
         return attr_match
+
+    def delete(self):
+        Callbacks.trigger_on_destroy(self)
+        del self
 
     @property
     def class_(self):
@@ -80,14 +96,28 @@ class BaseNode(metaclass=ABCMeta):
 
     @property
     def inputs(self):
-        return self._inputs
+        # De-referencing weakref
+        if self.max_inputs == -1:
+            return {k: v() for k, v in self._inputs.items()}
+        else:
+            return {i: self.input(i) for i in range(self.max_inputs)}
 
     @property
     def dependents(self):
-        return self._outputs
+        # De-referencing weakref
+        return [o() for o in self._outputs]
 
     def input(self, index):
-        return self._inputs[index]
+        if self.max_inputs != -1 and index + 1 > self.max_inputs:
+            raise MaxInputsExceededException(
+                f'Node {self.name!r} takes a maximum of {self.max_inputs} '
+                f'inputs.'
+            )
+        elif not self._inputs.get(index):
+            return None
+
+        # De-referencing weakref
+        return self._inputs[index]()
 
     def set_input(self, index, node):
         # Verify connection
@@ -98,14 +128,16 @@ class BaseNode(metaclass=ABCMeta):
 
         # Unplug if node is None
         if node is None:
-            if self.inputs[index]:
-                node = self.inputs.pop(index)
-                node.dependents.remove(self)
+            if self._inputs.get(index):
+                weak_node = self._inputs.pop(index)
+                node = weak_node()
+                if node in node.dependents:
+                    node.dependents.remove(self)
             return True
 
         # Plug set input to node
-        self._inputs[index] = node
-        node.dependents.append(self)
+        self._inputs[index] = weakref.ref(node)
+        node.dependents.append(weakref.ref(self))
         return True
 
     def has_input(self, index):
@@ -118,3 +150,4 @@ class BaseNode(metaclass=ABCMeta):
     def execute(self):
         self._execute()
         self._dirty = False
+        return self.result

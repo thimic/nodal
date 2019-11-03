@@ -14,17 +14,28 @@ class Graph:
     def __init__(self):
         self._nodes = []
         Callbacks.add_on_create(self._on_node_create)
+        Callbacks.add_on_destroy(self._on_node_destroy)
 
     @staticmethod
     def create_node(class_name):
         return getattr(pyflow.nodes, class_name)()
 
+    @staticmethod
+    def delete_node(node):
+        node.delete()
+
     @property
     def nodes(self):
         return self._nodes
 
+    def clear(self):
+        self._nodes.clear()
+
     def execute(self, nodes):
-        pass
+        results = {}
+        for node in nodes:
+            results[node.name] = node.execute()
+        return results
 
     def _on_node_create(self, node):
         match = self._name_pattern.match(node.name)
@@ -41,3 +52,8 @@ class Graph:
                 number = int(match.groupdict().get('number', '0'))
             node.name = f'{name}{number + 1}'
         self._nodes.append(node)
+
+    def _on_node_destroy(self, node):
+        if node not in self._nodes:
+            return
+        self._nodes.remove(node)
