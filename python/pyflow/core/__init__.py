@@ -2,3 +2,4 @@
 # -*- coding: utf-8 -*-
 
 from .callbacks import Callbacks
+from .exceptions import *

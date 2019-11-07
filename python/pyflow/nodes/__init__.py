@@ -36,5 +36,5 @@ def __getattr__(name):
         __load__()
     if name in __node_classes__:
         return __node_classes__[name]
-    from pyflow.core.exceptions import NodeClassNotFoundException
+    from pyflow.core import NodeClassNotFoundException
     raise NodeClassNotFoundException(f'Unable to find node of class {name!r}.')

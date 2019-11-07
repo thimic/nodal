@@ -34,6 +34,27 @@ class TestCallbacks(TestCase):
         self.assertFalse(Callbacks._callbacks['on_create'])
         self.assertFalse(Callbacks._callbacks['on_destroy'])
 
+    def test__add_callback(self):
+        self.assertRaises(
+            AttributeError,
+            Callbacks._add_callback, 'foo', self.callback_func
+        )
+
+    def test__trigger(self):
+        noop = pyflow.nodes.NoOp()
+        self.assertRaises(AttributeError, Callbacks._trigger, 'foo', noop)
+
+        def noop_rename(node):
+            node.name += '_foo'
+
+        Callbacks.add_on_create(noop_rename, node_classes=['NoOp'])
+
+        noop = pyflow.nodes.NoOp()
+        self.assertTrue(noop.name.endswith('_foo'))
+
+        plus = pyflow.nodes.Plus()
+        self.assertFalse(plus.name.endswith('_foo'))
+
     def test_add_on_create(self):
         on_create = Callbacks._callbacks['on_create']
         Callbacks.add_on_create(self.callback_func)

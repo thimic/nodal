@@ -3,8 +3,6 @@
 
 import weakref
 
-from pyflow.core.exceptions import MaxInputsExceededException
-
 from abc import ABCMeta, abstractmethod
 
 from pyflow.core import Callbacks
@@ -108,12 +106,8 @@ class BaseNode(metaclass=ABCMeta):
         return [o() for o in self._outputs]
 
     def input(self, index):
-        if self.max_inputs != -1 and index + 1 > self.max_inputs:
-            raise MaxInputsExceededException(
-                f'Node {self.name!r} takes a maximum of {self.max_inputs} '
-                f'inputs.'
-            )
-        elif not self._inputs.get(index):
+        graph_utils.verify_input_index(self, index)
+        if not self._inputs.get(index):
             return None
 
         # De-referencing weakref
@@ -131,13 +125,13 @@ class BaseNode(metaclass=ABCMeta):
             if self._inputs.get(index):
                 weak_node = self._inputs.pop(index)
                 node = weak_node()
-                if node in node.dependents:
-                    node.dependents.remove(self)
+                if weak_node in node._outputs:
+                    node._outputs.remove(weak_node)
             return True
 
         # Plug set input to node
         self._inputs[index] = weakref.ref(node)
-        node.dependents.append(weakref.ref(self))
+        node._outputs.append(weakref.ref(self))
         return True
 
     def has_input(self, index):
@@ -150,4 +144,4 @@ class BaseNode(metaclass=ABCMeta):
     def execute(self):
         self._execute()
         self._dirty = False
-        return self.result
+        return self._result

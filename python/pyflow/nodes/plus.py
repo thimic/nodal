@@ -14,7 +14,7 @@ class Plus(BaseNode):
 
     def __init__(self, value=0):
         super(Plus, self).__init__()
-        self._attrs = {'name': None, 'value': value}
+        self._attrs = {'name': self.class_, 'value': value}
         self._result = 0
 
     @property

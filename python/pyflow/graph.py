@@ -44,12 +44,8 @@ class Graph:
         existing_names = [n.name for n in self._nodes]
         while node.name in existing_names:
             match = self._name_pattern.match(node.name)
-            if not match:
-                name = node.name
-                number = 0
-            else:
-                name = match.groupdict().get('name') or node.name
-                number = int(match.groupdict().get('number', '0'))
+            name = match.groupdict().get('name') or node.name
+            number = int(match.groupdict().get('number', '0'))
             node.name = f'{name}{number + 1}'
         self._nodes.append(node)
 
