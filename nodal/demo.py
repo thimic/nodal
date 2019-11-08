@@ -22,7 +22,6 @@ def demo():
     # Create an Output node and plug into the second Plus
     output = nodal.nodes.Output()
     output.set_input(0, plus2)
-    print(output.name)
 
     # Execute graph
     graph.execute(output)
