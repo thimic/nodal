@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import pyflow
+import nodal
 
-from pyflow.core import NodeClassNotFoundException
+from nodal.core import NodeClassNotFoundException
 
 from unittest import TestCase
 
@@ -12,9 +12,9 @@ class TestNodes(TestCase):
 
     def test_nodes_getattr(self):
 
-        noop = pyflow.nodes.NoOp()
+        noop = nodal.nodes.NoOp()
         self.assertTrue(noop)
         self.assertRaises(
             NodeClassNotFoundException,
-            getattr, pyflow.nodes, 'Foo'
+            getattr, nodal.nodes, 'Foo'
         )

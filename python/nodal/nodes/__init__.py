@@ -11,7 +11,7 @@ def __load__():
 
     from importlib import util as import_util
 
-    from pyflow.core.nodes.base import BaseNode
+    from nodal.core.nodes.base import BaseNode
 
     this_file = inspect.getfile(inspect.currentframe())
     this_dir = os.path.dirname(this_file)
@@ -19,7 +19,7 @@ def __load__():
         if path == this_file:
             continue
         basename = os.path.basename(path)
-        modulename = f'pyflow.nodes.{os.path.splitext(basename)[0]}'
+        modulename = f'nodal.nodes.{os.path.splitext(basename)[0]}'
         spec = import_util.spec_from_file_location(modulename, path)
         module = import_util.module_from_spec(spec)
         spec.loader.exec_module(module)
@@ -36,5 +36,5 @@ def __getattr__(name):
         __load__()
     if name in __node_classes__:
         return __node_classes__[name]
-    from pyflow.core import NodeClassNotFoundException
+    from nodal.core import NodeClassNotFoundException
     raise NodeClassNotFoundException(f'Unable to find node of class {name!r}.')

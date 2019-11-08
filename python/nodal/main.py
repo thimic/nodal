@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import pyflow
+import nodal
 
 
 def main():
 
-    num1 = pyflow.nodes.Plus(5)
+    num1 = nodal.nodes.Plus(5)
 
-    num2 = pyflow.nodes.Plus(7)
+    num2 = nodal.nodes.Plus(7)
     num2.set_input(0, num1)
 
-    noop = pyflow.nodes.NoOp()
+    noop = nodal.nodes.NoOp()
     noop.set_input(0, num2)
 
-    num3 = pyflow.nodes.Plus(-2)
+    num3 = nodal.nodes.Plus(-2)
     num3.set_input(0, noop)
 
-    num4 = pyflow.nodes.Plus(13)
+    num4 = nodal.nodes.Plus(13)
     num4.set_input(0, num3)
 
-    output = pyflow.nodes.Output()
+    output = nodal.nodes.Output()
     output.set_input(0, num4)
 
     output.execute()

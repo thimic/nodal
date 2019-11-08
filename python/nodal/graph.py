@@ -3,8 +3,8 @@
 
 import re
 
-import pyflow
-from pyflow.core import Callbacks
+import nodal
+from nodal.core import Callbacks
 
 
 class Graph:
@@ -18,7 +18,7 @@ class Graph:
 
     @staticmethod
     def create_node(class_name):
-        return getattr(pyflow.nodes, class_name)()
+        return getattr(nodal.nodes, class_name)()
 
     @staticmethod
     def delete_node(node):

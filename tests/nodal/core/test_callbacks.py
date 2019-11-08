@@ -3,8 +3,8 @@
 
 from unittest import TestCase
 
-import pyflow
-from pyflow.core import Callbacks
+import nodal
+from nodal.core import Callbacks
 
 
 class TestCallbacks(TestCase):
@@ -41,7 +41,7 @@ class TestCallbacks(TestCase):
         )
 
     def test__trigger(self):
-        noop = pyflow.nodes.NoOp()
+        noop = nodal.nodes.NoOp()
         self.assertRaises(AttributeError, Callbacks._trigger, 'foo', noop)
 
         def noop_rename(node):
@@ -49,10 +49,10 @@ class TestCallbacks(TestCase):
 
         Callbacks.add_on_create(noop_rename, node_classes=['NoOp'])
 
-        noop = pyflow.nodes.NoOp()
+        noop = nodal.nodes.NoOp()
         self.assertTrue(noop.name.endswith('_foo'))
 
-        plus = pyflow.nodes.Plus()
+        plus = nodal.nodes.Plus()
         self.assertFalse(plus.name.endswith('_foo'))
 
     def test_add_on_create(self):
@@ -73,13 +73,13 @@ class TestCallbacks(TestCase):
 
     def test_trigger_on_create(self):
         Callbacks.add_on_create(self.on_create_callback_func)
-        noop = pyflow.nodes.NoOp()
+        noop = nodal.nodes.NoOp()
         self.assertTrue(noop in self._nodes)
 
     def test_trigger_on_destroy(self):
         Callbacks.add_on_create(self.on_create_callback_func)
         Callbacks.add_on_destroy(self.on_destroy_callback_func)
-        noop = pyflow.nodes.NoOp()
+        noop = nodal.nodes.NoOp()
         self.assertTrue(noop in self._nodes)
         noop.delete()
         self.assertFalse(noop in self._nodes)

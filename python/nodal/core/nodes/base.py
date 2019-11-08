@@ -5,8 +5,8 @@ import weakref
 
 from abc import ABCMeta, abstractmethod
 
-from pyflow.core import Callbacks
-from pyflow import graph_utils
+from nodal.core import Callbacks
+from nodal import graph_utils
 
 
 class BaseNode(metaclass=ABCMeta):

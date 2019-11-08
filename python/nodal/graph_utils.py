@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from pyflow.core.exceptions import (
+from nodal.core.exceptions import (
     CyclicDependencyException,
     MaxInputsExceededException,
     NodeTypeMismatchException

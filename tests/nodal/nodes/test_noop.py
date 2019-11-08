@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import pyflow
+import nodal
 
-from pyflow.core import MaxInputsExceededException
+from nodal.core import MaxInputsExceededException
 
 from unittest import TestCase
 
@@ -11,8 +11,8 @@ from unittest import TestCase
 class TestNoOp(TestCase):
 
     def test_input(self):
-        noop1 = pyflow.nodes.NoOp()
-        noop2 = pyflow.nodes.NoOp()
+        noop1 = nodal.nodes.NoOp()
+        noop2 = nodal.nodes.NoOp()
         noop2.set_input(0, noop1)
 
         self.assertRaises(MaxInputsExceededException, noop1.input, 1)
@@ -25,18 +25,18 @@ class TestNoOp(TestCase):
         self.assertFalse(noop1.dependents)
 
     def test_set_input(self):
-        noop1 = pyflow.nodes.NoOp()
-        noop2 = pyflow.nodes.NoOp()
+        noop1 = nodal.nodes.NoOp()
+        noop2 = nodal.nodes.NoOp()
         self.assertRaises(MaxInputsExceededException, noop1.set_input, 1, noop2)
         self.assertTrue(noop1.set_input(0, noop2))
 
     def test_output_type(self):
-        noop = pyflow.nodes.NoOp()
+        noop = nodal.nodes.NoOp()
         self.assertEqual(object, noop.output_type)
 
     def test__execute(self):
-        plus = pyflow.nodes.Plus(5)
-        noop = pyflow.nodes.NoOp()
+        plus = nodal.nodes.Plus(5)
+        noop = nodal.nodes.NoOp()
 
         self.assertEqual(noop.result, [])
 

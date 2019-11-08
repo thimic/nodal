@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from pyflow.nodes.noop import NoOp
+from nodal.nodes.noop import NoOp
 
 
 class Output(NoOp):

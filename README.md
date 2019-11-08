@@ -1,3 +1,3 @@
-# PyFlow
+# Nodal
 
 An execution graph for Python tasks.

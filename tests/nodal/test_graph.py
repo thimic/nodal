@@ -3,9 +3,9 @@
 
 from unittest import skip, TestCase
 
-import pyflow
+import nodal
 
-from pyflow import Graph
+from nodal import Graph
 
 
 class TestGraph(TestCase):
@@ -20,7 +20,7 @@ class TestGraph(TestCase):
         noop = self.graph.create_node('NoOp')
         self.assertTrue(noop in self.graph.nodes)
 
-        output = pyflow.nodes.Output()
+        output = nodal.nodes.Output()
         self.assertTrue(output in self.graph.nodes)
 
     def test_delete_node(self):
@@ -29,7 +29,7 @@ class TestGraph(TestCase):
         self.graph.delete_node(noop)
         self.assertFalse(self.graph.nodes)
 
-        output = pyflow.nodes.Output()
+        output = nodal.nodes.Output()
         self.assertTrue(output in self.graph.nodes)
         output.delete()
         self.assertFalse(self.graph.nodes)
@@ -49,7 +49,7 @@ class TestGraph(TestCase):
         plus1 = self.graph.create_node('Plus')
         plus1.value = 5
 
-        plus2 = pyflow.nodes.Plus()
+        plus2 = nodal.nodes.Plus()
         plus2.value = 2
         plus2.set_input(0, plus1)
 
@@ -63,20 +63,20 @@ class TestGraph(TestCase):
         noop1 = self.graph.create_node('NoOp')
         self.assertEqual(noop1.name, 'NoOp1')
 
-        noop2 = pyflow.nodes.NoOp()
+        noop2 = nodal.nodes.NoOp()
         self.assertEqual(noop2.name, 'NoOp2')
 
         noop3 = self.graph.create_node('NoOp')
         self.assertEqual(noop3.name, 'NoOp3')
 
-        output = pyflow.nodes.Output()
+        output = nodal.nodes.Output()
         self.assertEqual(output.name, 'Output1')
 
     def test__on_node_destroy(self):
 
         # Create 3 NoOps
         noop1 = self.graph.create_node('NoOp')
-        noop2 = pyflow.nodes.NoOp()
+        noop2 = nodal.nodes.NoOp()
         noop3 = self.graph.create_node('NoOp')
 
         # Delete two NoOps and check that we are left with one
@@ -85,5 +85,5 @@ class TestGraph(TestCase):
         self.assertEqual(self.graph.nodes, [noop1])
 
         # Create new NoOp and check that it gets named as expected
-        noop2 = pyflow.nodes.NoOp()
+        noop2 = nodal.nodes.NoOp()
         self.assertEqual(noop2.name, 'NoOp2')
