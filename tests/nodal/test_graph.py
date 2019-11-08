@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from unittest import skip, TestCase
+from unittest import TestCase
 
 import nodal
 

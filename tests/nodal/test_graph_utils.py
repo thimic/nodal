@@ -4,7 +4,7 @@
 from unittest import TestCase
 
 import nodal
-from nodal.core.exceptions import (
+from nodal.core import (
     CyclicDependencyException,
     NodeTypeMismatchException,
     MaxInputsExceededException

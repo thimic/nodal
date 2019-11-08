@@ -13,7 +13,7 @@ class Text(BaseNode):
 
     def __init__(self, text=''):
         super(Text, self).__init__()
-        self._attrs = {'name': self.class_, 'text': text}
+        self._attrs['text'] = text
         self._result = ''
 
     def _execute(self):

@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="nodal",  # Replace with your own username
+    name="nodal",
     version="0.0.1",
     author="Michael Thingnes",
     author_email="thimic@gmail.com",
@@ -19,4 +19,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.7',
+    setup_requires=['wheel'],
 )
