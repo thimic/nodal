@@ -1,10 +1,3 @@
-# Nodal
-
-An execution graph for Python tasks.
-
-## Example
-
-```python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -35,4 +28,3 @@ def demo():
 
 if __name__ == '__main__':
     demo()
-```

@@ -10,4 +10,6 @@ class Output(NoOp):
 
     def _execute(self):
         super(Output, self)._execute()
-        print(self._result)
+        print(' RESULT '.center(80, '='))
+        print(f'{self.name}: {self._result}')
+        print('=' * 80)

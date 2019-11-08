@@ -5,6 +5,7 @@ import re
 
 import nodal
 from nodal.core import Callbacks
+from nodal.core.nodes import BaseNode
 
 
 class Graph:
@@ -32,6 +33,8 @@ class Graph:
         self._nodes.clear()
 
     def execute(self, nodes):
+        if isinstance(nodes, BaseNode):
+            nodes = [nodes]
         results = {}
         for node in nodes:
             results[node.name] = node.execute()
