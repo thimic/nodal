@@ -15,8 +15,7 @@ def demo():
     plus1 = nodal.nodes.Plus(3)
 
     # Create a Plus node with value 7 and plug into the first Plus
-    plus2 = graph.create_node('Plus')
-    plus2.value = 7
+    plus2 = graph.create_node('Plus', 7)
     plus2.set_input(0, plus1)
 
     # Create an Output node and plug into the second Plus

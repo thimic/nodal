@@ -18,8 +18,8 @@ class Graph:
         Callbacks.add_on_destroy(self._on_node_destroy)
 
     @staticmethod
-    def create_node(class_name):
-        return getattr(nodal.nodes, class_name)()
+    def create_node(class_name, *args, **kwargs):
+        return getattr(nodal.nodes, class_name)(*args, **kwargs)
 
     @staticmethod
     def delete_node(node):
