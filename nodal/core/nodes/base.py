@@ -1,31 +1,94 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import json
 import weakref
+import yaml
 
 from abc import ABCMeta, abstractmethod
 
+from nodal import graph_utils, nodes
 from nodal.core import Callbacks
-from nodal import graph_utils
 
 
 class BaseNode(metaclass=ABCMeta):
 
     _input_types = {
-        0: [object]
+        0: {'name': '_', 'types': [object], 'default': None}
     }
-    _output_type = object
+    _output_type = {'default': NotImplemented, 'type': object}
     _max_inputs = 1
 
-    def __init__(self):
-        self._inputs = {}
-        self._outputs = []
-        self._result = []
-        self._dirty = True
+    def __new__(cls, *args, **kwargs):
+        inst = super().__new__(cls)
+        inst._attrs = {'name': cls.__name__}
+        inst._inputs = {}
+        inst._outputs = []
+        inst._result = NotImplemented
+        inst._dirty = True
+        return inst
 
-        self._attrs = {'name': self.class_}
+    def __init__(self, *args, **kwargs):
+
+        input_names = [k['name'] for k in self._input_types.values()]
+        for input_ in self._input_types.values():
+            self._attrs[input_['name']] = input_['default']
+
+        input_len = len([
+            i for i in self._input_types.values() if i['name'] != '_'
+        ])
+        if len(args) > input_len and -1 not in self._input_types:
+            raise TypeError(
+                f'{self.class_}.__init__() takes a maximum of {input_len} '
+                f'positional argument{"s" if input_len != 1 else ""} but '
+                f'{len(args)} {"were" if len(args) > 1 else "was"} given'
+            )
+        for idx, arg in enumerate(args):
+            input_type = list(self._input_types.values())[idx]
+            types = tuple(input_type['types'])
+            if not isinstance(arg, types):
+                raise TypeError(
+                    f'Positional argument {idx} must be of type '
+                    f'{", ".join([repr(t.__name__) for t in types])}, while '
+                    f'{arg!r} is {type(arg).__name__!r}'
+                )
+            self._attrs[input_type['name']] = arg
+
+        for key, value in kwargs.items():
+            if key in self._attrs or key in input_names:
+                if key != 'name' and key in self._attrs:
+                    input_type = [
+                        v for v in self._input_types.values()
+                        if v['name'] == key
+                    ][0]
+                    types = tuple(input_type['types'])
+                    if not isinstance(value, types):
+                        raise TypeError(
+                            f'Keyword argument {key!r} must be of type '
+                            f'{", ".join([repr(t.__name__) for t in types])}, '
+                            f'not {type(value).__name__!r}'
+                        )
+                self._attrs[key] = value
+            else:
+                raise TypeError(f'{self.class_}() takes no keyword {key!r}')
+
+        self._result = self._output_type['default']
 
         Callbacks.trigger_on_create(self)
+
+    def __getattr__(self, item):
+        if item in self._attrs:
+            return self._attrs[item]
+
+    def __setattr__(self, key, value):
+        attrs = self.__dict__.get('_attrs')
+        if attrs and key in attrs:
+            if attrs[key] == value:
+                return
+            attrs[key] = value
+            self.__dict__['_dirty'] = True
+            return
+        super().__setattr__(key, value)
 
     def __del__(self):
         """
@@ -47,6 +110,44 @@ class BaseNode(metaclass=ABCMeta):
         )
         return attr_match
 
+    def __hash__(self):
+        return hash(tuple(self.attrs.keys()))
+
+    def to_string(self):
+        """
+        Serialise node to string.
+
+        Returns:
+            str: Node as string
+
+        """
+        defaults = {v['name']: v['default'] for v in self._input_types.values()}
+        data = {
+            self.class_: {
+                k: v for k, v in self.attrs.items()
+                if k != '_' and defaults.get(k) != v
+            }
+        }
+        string = yaml.dump(data, default_flow_style=True).strip()[1:-1]
+        return string
+
+    @classmethod
+    def from_string(cls, string):
+        """
+        Create node from serialised string.
+
+        Args:
+            string (str): Node as string
+
+        Returns:
+            BaseNode: Created node
+
+        """
+        data = yaml.safe_load(f'{{{string}}}')
+        key, value = list(data.items())[0]
+        node = getattr(nodes, key)(**value)
+        return node
+
     def delete(self):
         Callbacks.trigger_on_destroy(self)
         del self
@@ -54,14 +155,6 @@ class BaseNode(metaclass=ABCMeta):
     @property
     def class_(self):
         return self.__class__.__name__
-
-    @property
-    def name(self):
-        return self._attrs['name']
-
-    @name.setter
-    def name(self, value):
-        self._attrs['name'] = value
 
     @property
     def input_types(self):

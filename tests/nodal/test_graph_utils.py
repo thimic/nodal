@@ -48,7 +48,7 @@ class TestVerifyConnection(TestCase):
         self.assertTrue(node5.set_input(0, node4))
 
         # Check that no ops takes on the output type of its input
-        self.assertEqual(node4.output_type, float)
+        self.assertEqual(node4.output_type['type'], float)
         node6 = nodal.nodes.Text()
         self.assertRaises(NodeTypeMismatchException, node6.set_input, 0, node4)
 

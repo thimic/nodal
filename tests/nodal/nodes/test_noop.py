@@ -10,6 +10,10 @@ from unittest import TestCase
 
 class TestNoOp(TestCase):
 
+    def test___init__(self):
+        self.assertRaises(TypeError, nodal.nodes.NoOp, 'foo')
+        self.assertRaises(TypeError, nodal.nodes.NoOp, test='foo')
+
     def test_input(self):
         noop1 = nodal.nodes.NoOp()
         noop2 = nodal.nodes.NoOp()
@@ -24,6 +28,12 @@ class TestNoOp(TestCase):
         self.assertIsNone(noop2.input(0))
         self.assertFalse(noop1.dependents)
 
+    def test_name(self):
+        noop = nodal.nodes.NoOp()
+        self.assertEqual('NoOp', noop.name)
+        noop.name = 'FooOp'
+        self.assertEqual('FooOp', noop.name)
+
     def test_set_input(self):
         noop1 = nodal.nodes.NoOp()
         noop2 = nodal.nodes.NoOp()
@@ -32,13 +42,13 @@ class TestNoOp(TestCase):
 
     def test_output_type(self):
         noop = nodal.nodes.NoOp()
-        self.assertEqual(object, noop.output_type)
+        self.assertEqual(object, noop.output_type['type'])
 
     def test__execute(self):
         plus = nodal.nodes.Plus(5)
         noop = nodal.nodes.NoOp()
 
-        self.assertEqual(noop.result, [])
+        self.assertEqual(noop.result, NotImplemented)
 
         noop.set_input(0, plus)
         noop.execute()

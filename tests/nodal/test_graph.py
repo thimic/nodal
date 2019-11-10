@@ -6,6 +6,7 @@ from unittest import TestCase
 import nodal
 
 from nodal import Graph
+from nodal.core.callbacks import Callbacks
 
 
 class TestGraph(TestCase):
@@ -15,6 +16,7 @@ class TestGraph(TestCase):
 
     def tearDown(self):
         self.graph.clear()
+        Callbacks.clear()
 
     def test_create_node(self):
         noop = self.graph.create_node('NoOp')
@@ -57,7 +59,12 @@ class TestGraph(TestCase):
         output.set_input(0, plus2)
 
         result = self.graph.execute([plus1, plus2, output])
-        self.assertDictEqual(result, {plus1.name: 5, plus2.name: 7, output.name: 7})
+        self.assertDictEqual(
+            result,
+            {plus1.name: 5, plus2.name: 7, output.name: 7}
+        )
+
+        self.assertEqual({plus1.name: 5}, self.graph.execute(plus1))
 
     def test__on_node_create(self):
         noop1 = self.graph.create_node('NoOp')
@@ -87,3 +94,52 @@ class TestGraph(TestCase):
         # Create new NoOp and check that it gets named as expected
         noop2 = nodal.nodes.NoOp()
         self.assertEqual(noop2.name, 'NoOp2')
+
+    def test_to_string(self):
+
+        # Create graph
+        plus1 = self.graph.create_node('Plus', 5)
+        plus2 = self.graph.create_node('Plus', 10)
+        plus3 = self.graph.create_node('Plus', 15)
+
+        sum_ = self.graph.create_node('Plus')
+        sum_.name = 'Sum1'
+        sum_.set_input(0, plus1)
+        sum_.set_input(1, plus2)
+        sum_.set_input(2, plus3)
+
+        noop = self.graph.create_node('NoOp')
+        noop.set_input(0, sum_)
+
+        plus4 = self.graph.create_node('Plus', 20)
+        plus4.set_input(0, noop)
+
+        output = self.graph.create_node('Output')
+        output.set_input(0, plus4)
+
+        # Check that the graph has the right output
+        self.assertEqual({'Output1': 50}, self.graph.execute(output))
+
+        # Output graph to string
+        string = self.graph.to_string()
+
+        # Clear the graph
+        orig_nodes = self.graph.nodes
+        self.graph.clear()
+        self.assertFalse(self.graph.nodes)
+
+        # Read graph in from string
+        self.graph.from_string(string)
+
+        # Verify that graph still produces same output
+        output = self.graph.to_node('Output1')
+        self.assertEqual({'Output1': 50}, self.graph.execute(output))
+
+        # Verify that the graph nodes are still the same
+        self.assertSetEqual(set(orig_nodes), set(self.graph.nodes))
+
+        # Verify node connections remain intact
+        for orig_node in orig_nodes:
+            node = self.graph.to_node(orig_node.name)
+            self.assertSetEqual(set(orig_node.inputs), set(node.inputs))
+            self.assertSetEqual(set(orig_node.dependents), set(node.dependents))

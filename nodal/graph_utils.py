@@ -48,15 +48,15 @@ def verify_type_match(node, input_idx, input_node):
 
     """
     if -1 in node.input_types:
-        input_types = node.input_types[-1]
+        input_types = node.input_types[-1]['types']
     else:
-        input_types = node.input_types[input_idx]
-    if not any(issubclass(input_node.output_type, t) for t in input_types):
+        input_types = node.input_types[input_idx]['types']
+    if not any(issubclass(input_node.output_type['type'], t) for t in input_types):
         msg = (
             f'Input {input_idx} for node {node.name!r} expects type(s) '
             f'{", ".join([repr(t.__name__) for t in input_types])}, while node '
             f'{input_node.name!r} only outputs type '
-            f'{input_node.output_type.__name__!r}.'
+            f'{input_node.output_type["type"].__name__!r}.'
         )
         raise NodeTypeMismatchException(msg)
 

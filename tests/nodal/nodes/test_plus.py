@@ -8,6 +8,10 @@ from unittest import TestCase
 
 class TestPlus(TestCase):
 
+    def test___init__(self):
+        self.assertRaises(TypeError, nodal.nodes.Plus, 'foo')
+        self.assertRaises(TypeError, nodal.nodes.Plus, value='foo')
+
     def test_multi_input(self):
         plus1 = nodal.nodes.Plus(1)
         plus2 = nodal.nodes.Plus(2)
@@ -24,7 +28,7 @@ class TestPlus(TestCase):
         plus1.set_input(0, plus10)
         self.assertEqual(plus4.result, 20)
 
-        plus5 = nodal.nodes.Plus(5)
+        plus5 = nodal.nodes.Plus(value=5)
         plus1.set_input(1, plus5)
         self.assertEqual(plus4.result, 25)
 

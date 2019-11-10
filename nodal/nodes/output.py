@@ -5,8 +5,6 @@ from nodal.nodes.noop import NoOp
 
 
 class Output(NoOp):
-    def __init__(self):
-        super(Output, self).__init__()
 
     def _execute(self):
         super(Output, self)._execute()
