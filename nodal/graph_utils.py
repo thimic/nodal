@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from collections import defaultdict
+
 from nodal.core.exceptions import (
     CyclicDependencyException,
     MaxInputsExceededException,
@@ -33,14 +35,14 @@ def verify_dependencies(node, input_node):
         verify_dependencies(node, upstream_node)
 
 
-def verify_type_match(node, input_idx, input_node):
+def verify_type_match(node, input_idx, parent_node):
     """
     Verifies that the input_node outputs a type supported by node's input index.
 
     Args:
         node (BaseNode): Current node
         input_idx (int): Current node's input to be connected to input_node
-        input_node (BaseNode): Node to connect current node's input to
+        parent_node (BaseNode): Node to connect current node's input to
 
     Raises:
         NodeTypeMismatchException: When input_node does not output a type
@@ -51,12 +53,12 @@ def verify_type_match(node, input_idx, input_node):
         input_types = node.input_types[-1]['types']
     else:
         input_types = node.input_types[input_idx]['types']
-    if not any(issubclass(input_node.output_type['type'], t) for t in input_types):
+    if not any(issubclass(parent_node.output_type['type'], t) for t in input_types):
         msg = (
             f'Input {input_idx} for node {node.name!r} expects type(s) '
             f'{", ".join([repr(t.__name__) for t in input_types])}, while node '
-            f'{input_node.name!r} only outputs type '
-            f'{input_node.output_type["type"].__name__!r}.'
+            f'{parent_node.name!r} only outputs type '
+            f'{parent_node.output_type["type"].__name__!r}.'
         )
         raise NodeTypeMismatchException(msg)
 

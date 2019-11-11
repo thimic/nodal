@@ -4,7 +4,7 @@
 import re
 
 import nodal
-from nodal.core import Callbacks
+from nodal.core import Callbacks, serialisation
 from nodal.core.nodes import BaseNode
 
 
@@ -67,23 +67,25 @@ class Graph:
         return [n for n in self.nodes if not n.inputs]
 
     def to_string(self):
-        items = []
-        for top_node in self.top_nodes():
-            items.append('set_input 0')
-            if top_node.dependents and len(top_node.dependents[0].inputs) > 1:
-                items.append(f'push {id(top_node):x}')
-            items.append(top_node)
-            node = top_node
-            while node.dependents:
-                node = node.dependents[0]
-                if node in items:
-                    continue
-                if len(node.inputs) > 1:
-                    for idx, input_node in node.inputs.items():
-                        items.append(f'set_input {id(input_node):x}')
-                items.append(node)
-        items = [i.to_string() if isinstance(i, BaseNode) else i for i in items]
-        return '\n'.join(items)
+        return serialisation.to_string(self.top_nodes())
+        #
+        # items = []
+        # for top_node in self.top_nodes():
+        #     items.append('set_input 0')
+        #     if top_node.dependents and len(top_node.dependents[0].inputs) > 1:
+        #         items.append(f'push {id(top_node):x}')
+        #     items.append(top_node)
+        #     node = top_node
+        #     while node.dependents:
+        #         node = node.dependents[0]
+        #         if node in items:
+        #             continue
+        #         if len(node.inputs) > 1:
+        #             for idx, input_node in node.inputs.items():
+        #                 items.append(f'set_input {id(input_node):x}')
+        #         items.append(node)
+        # items = [i.to_string() if isinstance(i, BaseNode) else i for i in items]
+        # return '\n'.join(items)
 
     @classmethod
     def from_string(cls, string):

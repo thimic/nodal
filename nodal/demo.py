@@ -25,6 +25,8 @@ def demo():
     # Execute graph
     graph.execute(output)
 
+    print(graph.to_string())
+
 
 if __name__ == '__main__':
     demo()

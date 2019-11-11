@@ -108,17 +108,20 @@ class TestGraph(TestCase):
         sum_.set_input(1, plus2)
         sum_.set_input(2, plus3)
 
+        output1 = self.graph.create_node('Output')
+        output1.set_input(0, sum_)
+
         noop = self.graph.create_node('NoOp')
         noop.set_input(0, sum_)
 
         plus4 = self.graph.create_node('Plus', 20)
         plus4.set_input(0, noop)
 
-        output = self.graph.create_node('Output')
-        output.set_input(0, plus4)
+        output2 = self.graph.create_node('Output')
+        output2.set_input(0, plus4)
 
         # Check that the graph has the right output
-        self.assertEqual({'Output1': 50}, self.graph.execute(output))
+        self.assertEqual({'Output2': 50}, self.graph.execute(output2))
 
         # Output graph to string
         string = self.graph.to_string()
@@ -128,12 +131,18 @@ class TestGraph(TestCase):
         self.graph.clear()
         self.assertFalse(self.graph.nodes)
 
+        print(string)
+
         # Read graph in from string
         self.graph.from_string(string)
 
+        print('=' * 80)
+        print(self.graph.to_string())
+
         # Verify that graph still produces same output
-        output = self.graph.to_node('Output1')
-        self.assertEqual({'Output1': 50}, self.graph.execute(output))
+        output2 = self.graph.to_node('Output2')
+        print(output2)
+        self.assertEqual({'Output2': 50}, self.graph.execute(output2))
 
         # Verify that the graph nodes are still the same
         self.assertSetEqual(set(orig_nodes), set(self.graph.nodes))
