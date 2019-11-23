@@ -1,5 +1,9 @@
 # Nodal
 
+https://github.com/thimic/nodal/workflows/lint_tests/badge.svg
+[![Actions Status](https://github.com/thimic/nodal/workflows/lint_tests/badge.svg)](https://github.com/thimic/nodal/actions)
+
+
 An execution graph for Python tasks.
 
 ## Example
