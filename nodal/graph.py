@@ -6,7 +6,7 @@ import re
 import nodal
 
 from collections import Counter
-from nodal.core import Callbacks, serialisation
+from nodal.core import Callbacks
 from nodal.core.exceptions import CyclicDependencyException
 from nodal.core.nodes import BaseNode
 from typing import Dict, List, Union
@@ -94,74 +94,3 @@ class Graph:
         if inputs:
             raise CyclicDependencyException('Graph is cyclical!')
         return sorted_nodes
-
-    def to_string(self):
-        lines = []
-        sorted_nodes = self.sort()
-        for idx, node in enumerate(sorted_nodes):
-            lines.append(node.to_string())
-            setter = False
-            for child in node.dependents:
-                if child != sorted_nodes[idx + 1]:
-                    setter = True
-            if setter:
-                lines.append(f'set {id(node):x}')
-            for input_idx, input_node in node.inputs.items():
-                if input_node != sorted_nodes[idx - 1]:
-                    lines.append(f'push {input_idx} ${id(input_node):x}')
-        return '\n'.join(lines)
-
-    @classmethod
-    def from_string(cls, string: str) -> List[BaseNode]:
-        nodes = []
-        sets = {}
-        node = None
-        node_inputs = None
-        push_buffer = {}
-        lines = string.splitlines()
-        for line_no, line in enumerate(lines, start=1):
-
-            if line_no == len(lines):
-                print('Last line!')
-
-            # Check for and store set commands
-            if line.startswith('set') and node:
-                sets[line.replace('set ', '').strip()] = node
-                if line_no != len(lines):
-                    continue
-
-            # Check for and store push commands
-            elif line.startswith('push'):
-                _, input_idx, node_id = line.strip().split(' ')
-                input_idx = int(input_idx)
-                node_id = node_id.strip('$')
-                push_buffer[input_idx] = node_id
-                if line_no != len(lines):
-                    continue
-
-            # We have a new node. First connect up the old one by going through
-            # the push buffer.
-            if node:
-                if node_inputs != 0:
-                    if push_buffer:
-                        for idx, push in push_buffer.items():
-                            node.set_input(idx, sets[push])
-                        if node_inputs > len(push_buffer):
-                            for i in range(node_inputs):
-                                if i not in push_buffer:
-                                    node.set_input(i, nodes[-1])
-                                    break
-                        push_buffer.clear()
-                    elif nodes:
-                        node.set_input(0, nodes[-1])
-
-                nodes.append(node)
-
-            if line_no == len(lines):
-                return nodes
-
-            # Create node
-            node = BaseNode.from_string(line)
-            node_inputs = BaseNode.inputs_from_string(line)
-
-        return nodes

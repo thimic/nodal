@@ -120,44 +120,6 @@ class BaseNode(metaclass=ABCMeta):
     def __lt__(self, other):
         return self.name < other.name
 
-    def to_string(self):
-        """
-        Serialise node to string.
-
-        Returns:
-            str: Node as string
-
-        """
-        defaults = {v['name']: v['default'] for v in self._input_types.values()}
-        data = {
-            self.class_: {
-                k: v for k, v in self.attrs.items()
-                if k != '_' and defaults.get(k) != v
-            }
-        }
-        if len(self.inputs) != 1:
-            data[self.class_]['inputs'] = len(self.inputs)
-        string = yaml.dump(data, default_flow_style=True).strip()[1:-1]
-        return string
-
-    @classmethod
-    def from_string(cls, string):
-        """
-        Create node from serialised string.
-
-        Args:
-            string (str): Node as string
-
-        Returns:
-            BaseNode: Created node
-
-        """
-        data = yaml.safe_load(f'{{{string}}}')
-        key, value = list(data.items())[0]
-        value.pop('inputs', None)
-        node = getattr(nodes, key)(**value)
-        return node
-
     @classmethod
     def inputs_from_string(cls, string):
         data = yaml.safe_load(f'{{{string}}}')
