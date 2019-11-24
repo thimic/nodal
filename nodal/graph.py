@@ -18,8 +18,18 @@ class Graph:
 
     def __init__(self):
         self._nodes = []
+
+    def __enter__(self):
         Callbacks.add_on_create(self._on_node_create)
         Callbacks.add_on_destroy(self._on_node_destroy)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        Callbacks.remove_on_create(self._on_node_create)
+        Callbacks.remove_on_destroy(self._on_node_destroy)
+
+    def __del__(self):
+        Callbacks.remove_on_create(self._on_node_create)
+        Callbacks.remove_on_destroy(self._on_node_destroy)
 
     @staticmethod
     def create_node(class_name: str, *args, **kwargs) -> BaseNode:

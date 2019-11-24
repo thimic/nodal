@@ -9,6 +9,10 @@ from nodal.core import Callbacks
 
 class TestCallbacks(TestCase):
 
+    def setUp(self):
+        Callbacks.clear()
+        self._nodes = []
+
     def callback_func(self, node):
         return node
 
@@ -23,10 +27,6 @@ class TestCallbacks(TestCase):
             return
         self._nodes.remove(node)
 
-    def setUp(self):
-        Callbacks.clear()
-        self._nodes = []
-
     def test_clear(self):
         Callbacks.add_on_create(self.callback_func)
         Callbacks.add_on_destroy(self.callback_func)
@@ -34,11 +34,21 @@ class TestCallbacks(TestCase):
         self.assertFalse(Callbacks._callbacks['on_create'])
         self.assertFalse(Callbacks._callbacks['on_destroy'])
 
-    def test__add_callback(self):
-        self.assertRaises(
-            AttributeError,
-            Callbacks._add_callback, 'foo', self.callback_func
+    def test__get_callback_dict(self):
+        self.assertRaises(AttributeError, Callbacks._get_callback_dict, 'foo')
+
+        self.assertDictEqual(
+            Callbacks._callbacks['on_create'],
+            Callbacks._get_callback_dict('on_create')
         )
+
+    def test__remove_callback(self):
+        on_create = Callbacks._callbacks['on_create']
+        Callbacks.add_on_create(self.noop_callback_func, ['NoOp'])
+        self.assertTrue(self.noop_callback_func in on_create['NoOp'])
+
+        Callbacks.remove_on_create(self.noop_callback_func, 'NoOp')
+        self.assertFalse(self.noop_callback_func in on_create['NoOp'])
 
     def test__trigger(self):
         noop = nodal.nodes.NoOp()
@@ -60,8 +70,22 @@ class TestCallbacks(TestCase):
         Callbacks.add_on_create(self.callback_func)
         self.assertTrue(self.callback_func in on_create[None])
 
+        Callbacks.add_on_create(self.noop_callback_func, 'NoOp')
+        self.assertTrue(self.noop_callback_func in on_create['NoOp'])
+
+    def test_remove_on_create(self):
+        on_create = Callbacks._callbacks['on_create']
+        Callbacks.add_on_create(self.callback_func)
+        self.assertTrue(self.callback_func in on_create[None])
+
+        Callbacks.remove_on_create(self.noop_callback_func)
+        self.assertFalse(self.noop_callback_func in on_create[None])
+
         Callbacks.add_on_create(self.noop_callback_func, ['NoOp'])
         self.assertTrue(self.noop_callback_func in on_create['NoOp'])
+
+        Callbacks.remove_on_create(self.noop_callback_func, 'NoOp')
+        self.assertFalse(self.noop_callback_func in on_create['NoOp'])
 
     def test_add_on_destroy(self):
         on_destroy = Callbacks._callbacks['on_destroy']
@@ -70,6 +94,20 @@ class TestCallbacks(TestCase):
 
         Callbacks.add_on_destroy(self.noop_callback_func, ['NoOp'])
         self.assertTrue(self.noop_callback_func in on_destroy['NoOp'])
+
+    def test_remove_on_destroy(self):
+        on_create = Callbacks._callbacks['on_destroy']
+        Callbacks.add_on_destroy(self.callback_func)
+        self.assertTrue(self.callback_func in on_create[None])
+
+        Callbacks.remove_on_destroy(self.noop_callback_func)
+        self.assertFalse(self.noop_callback_func in on_create[None])
+
+        Callbacks.add_on_destroy(self.noop_callback_func, ['NoOp'])
+        self.assertTrue(self.noop_callback_func in on_create['NoOp'])
+
+        Callbacks.remove_on_destroy(self.noop_callback_func, 'NoOp')
+        self.assertFalse(self.noop_callback_func in on_create['NoOp'])
 
     def test_trigger_on_create(self):
         Callbacks.add_on_create(self.on_create_callback_func)

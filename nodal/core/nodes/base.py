@@ -117,15 +117,6 @@ class BaseNode(metaclass=ABCMeta):
         )
         return attr_match
 
-    def __lt__(self, other):
-        return self.name < other.name
-
-    @classmethod
-    def inputs_from_string(cls, string):
-        data = yaml.safe_load(f'{{{string}}}')
-        _, value = list(data.items())[0]
-        return value.get('inputs', 1)
-
     def delete(self):
         Callbacks.trigger_on_destroy(self)
         del self

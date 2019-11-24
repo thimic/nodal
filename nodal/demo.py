@@ -11,21 +11,22 @@ def demo():
     # Create a graph
     graph = Graph()
 
-    # Create a Plus node with value 3
-    plus1 = nodal.nodes.Plus(3)
+    # Create nodes within the graph context to trigger graph callbacks.
+    with graph:
 
-    # Create a Plus node with value 7 and plug into the first Plus
-    plus2 = graph.create_node('Plus', 7)
-    plus2.set_input(0, plus1)
+        # Create a Plus node with value 3
+        plus1 = nodal.nodes.Plus(3)
 
-    # Create an Output node and plug into the second Plus
-    output = nodal.nodes.Output()
-    output.set_input(0, plus2)
+        # Create a Plus node with value 7 and plug into the first Plus
+        plus2 = graph.create_node('Plus', 7)
+        plus2.set_input(0, plus1)
+
+        # Create an Output node and plug into the second Plus
+        output = nodal.nodes.Output()
+        output.set_input(0, plus2)
 
     # Execute graph
     graph.execute(output)
-
-    print(graph.to_string())
 
 
 if __name__ == '__main__':
