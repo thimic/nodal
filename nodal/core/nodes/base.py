@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+
 import weakref
 import yaml
 
@@ -8,6 +10,7 @@ from abc import ABCMeta, abstractmethod
 
 from nodal import graph_utils, nodes
 from nodal.core import Callbacks
+from typing import Dict, Set
 
 
 class BaseNode(metaclass=ABCMeta):
@@ -20,9 +23,9 @@ class BaseNode(metaclass=ABCMeta):
 
     def __new__(cls, *args, **kwargs):
         inst = super().__new__(cls)
-        inst._attrs = {'name': cls.__name__}
+        inst._attrs = {'name': f'{cls.__name__}1'}
         inst._inputs = {}
-        inst._outputs = []
+        inst._outputs = set([])
         inst._result = NotImplemented
         inst._dirty = True
         return inst
@@ -100,17 +103,22 @@ class BaseNode(metaclass=ABCMeta):
     def __repr__(self):
         return f'<{self.class_}(name={self.name!r}) at 0x{id(self):x}>'
 
+    def __hash__(self):
+        attrs = self.attrs.copy()
+        attrs['class'] = self.class_
+        return hash(tuple(attrs))
+
     def __eq__(self, other):
         type_match = type(self) == type(other)
         if not type_match:
             return False
         attr_match = all(
-            [self.attrs[a] == other.attrs.get(a) for a in self.attrs]
+            [self.attrs[a] == other.attrs[a] for a in self.attrs]
         )
         return attr_match
 
-    def __hash__(self):
-        return hash(tuple(self.attrs.keys()))
+    def __lt__(self, other):
+        return self.name < other.name
 
     def to_string(self):
         """
@@ -127,6 +135,8 @@ class BaseNode(metaclass=ABCMeta):
                 if k != '_' and defaults.get(k) != v
             }
         }
+        if len(self.inputs) != 1:
+            data[self.class_]['inputs'] = len(self.inputs)
         string = yaml.dump(data, default_flow_style=True).strip()[1:-1]
         return string
 
@@ -144,8 +154,15 @@ class BaseNode(metaclass=ABCMeta):
         """
         data = yaml.safe_load(f'{{{string}}}')
         key, value = list(data.items())[0]
+        value.pop('inputs', None)
         node = getattr(nodes, key)(**value)
         return node
+
+    @classmethod
+    def inputs_from_string(cls, string):
+        data = yaml.safe_load(f'{{{string}}}')
+        _, value = list(data.items())[0]
+        return value.get('inputs', 1)
 
     def delete(self):
         Callbacks.trigger_on_destroy(self)
@@ -185,7 +202,7 @@ class BaseNode(metaclass=ABCMeta):
         return self._result
 
     @property
-    def inputs(self):
+    def inputs(self) -> Dict[int, BaseNode]:
         # De-referencing weakref
         if self.max_inputs == -1:
             return {k: v() for k, v in self._inputs.items()}
@@ -193,9 +210,9 @@ class BaseNode(metaclass=ABCMeta):
             return {i: self.input(i) for i in range(self.max_inputs)}
 
     @property
-    def dependents(self):
+    def dependents(self) -> Set[BaseNode]:
         # De-referencing weakref
-        return [o() for o in self._outputs]
+        return set([o() for o in self._outputs])
 
     def input(self, index):
         graph_utils.verify_input_index(self, index)
@@ -223,7 +240,7 @@ class BaseNode(metaclass=ABCMeta):
 
         # Plug set input to node
         self._inputs[index] = weakref.ref(node)
-        node._outputs.append(weakref.ref(self))
+        node._outputs.add(weakref.ref(self))
         return True
 
     def has_input(self, index):

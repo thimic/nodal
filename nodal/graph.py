@@ -4,8 +4,12 @@
 import re
 
 import nodal
+
+from collections import Counter
 from nodal.core import Callbacks, serialisation
+from nodal.core.exceptions import CyclicDependencyException
 from nodal.core.nodes import BaseNode
+from typing import Dict, List, Union
 
 
 class Graph:
@@ -18,21 +22,21 @@ class Graph:
         Callbacks.add_on_destroy(self._on_node_destroy)
 
     @staticmethod
-    def create_node(class_name, *args, **kwargs):
+    def create_node(class_name: str, *args, **kwargs) -> BaseNode:
         return getattr(nodal.nodes, class_name)(*args, **kwargs)
 
     @staticmethod
-    def delete_node(node):
+    def delete_node(node: BaseNode):
         node.delete()
 
     @property
-    def nodes(self):
+    def nodes(self) -> List[BaseNode]:
         return self._nodes
 
     def clear(self):
         self._nodes.clear()
 
-    def execute(self, nodes):
+    def execute(self, nodes: Union[BaseNode, List[BaseNode]]) -> Dict[str, object]:
         if isinstance(nodes, BaseNode):
             nodes = [nodes]
         results = {}
@@ -40,7 +44,7 @@ class Graph:
             results[node.name] = node.execute()
         return results
 
-    def _on_node_create(self, node):
+    def _on_node_create(self, node: BaseNode):
         match = self._name_pattern.match(node.name)
         if not match:
             node.name = f'{node.name}1'
@@ -52,69 +56,112 @@ class Graph:
             node.name = f'{name}{number + 1}'
         self._nodes.append(node)
 
-    def _on_node_destroy(self, node):
+    def _on_node_destroy(self, node: BaseNode):
         if node not in self._nodes:
             return
         self._nodes.remove(node)
 
-    def to_node(self, name):
+    def to_node(self, name: str) -> Union[BaseNode, None]:
         nodes = [n for n in self.nodes if n.name == name]
         if not nodes:
             return
         return nodes[0]
 
-    def top_nodes(self):
+    def top_nodes(self) -> list:
         return [n for n in self.nodes if not n.inputs]
 
+    def sort(self) -> list:
+        """
+        Topical sort of DAG using Kahn's algorithm.
+
+        Returns:
+            list: Sorted list of nodes
+
+        """
+        inputs = Counter()
+        top_nodes = self.top_nodes()
+        sorted_nodes = []
+        while top_nodes:
+            node = top_nodes.pop(0)
+            sorted_nodes.append(node)
+            for child in node.dependents:
+                if child.name not in inputs:
+                    inputs[child.name] = len(child.inputs)
+                inputs[child.name] -= 1
+                if not inputs[child.name]:
+                    inputs.pop(child.name)
+                    top_nodes.insert(0, child)
+        if inputs:
+            raise CyclicDependencyException('Graph is cyclical!')
+        return sorted_nodes
+
     def to_string(self):
-        return serialisation.to_string(self.top_nodes())
-        #
-        # items = []
-        # for top_node in self.top_nodes():
-        #     items.append('set_input 0')
-        #     if top_node.dependents and len(top_node.dependents[0].inputs) > 1:
-        #         items.append(f'push {id(top_node):x}')
-        #     items.append(top_node)
-        #     node = top_node
-        #     while node.dependents:
-        #         node = node.dependents[0]
-        #         if node in items:
-        #             continue
-        #         if len(node.inputs) > 1:
-        #             for idx, input_node in node.inputs.items():
-        #                 items.append(f'set_input {id(input_node):x}')
-        #         items.append(node)
-        # items = [i.to_string() if isinstance(i, BaseNode) else i for i in items]
-        # return '\n'.join(items)
+        lines = []
+        sorted_nodes = self.sort()
+        for idx, node in enumerate(sorted_nodes):
+            lines.append(node.to_string())
+            setter = False
+            for child in node.dependents:
+                if child != sorted_nodes[idx + 1]:
+                    setter = True
+            if setter:
+                lines.append(f'set {id(node):x}')
+            for input_idx, input_node in node.inputs.items():
+                if input_node != sorted_nodes[idx - 1]:
+                    lines.append(f'push {input_idx} ${id(input_node):x}')
+        return '\n'.join(lines)
 
     @classmethod
-    def from_string(cls, string):
-        push = {}
-        set_inputs = {}
-        push_buffer = ''
-        input_buffer = []
+    def from_string(cls, string: str) -> List[BaseNode]:
         nodes = []
-        for line in string.splitlines():
-            if line.startswith('push'):
-                push_buffer = line.replace('push ', '').strip()
-                continue
-            elif line.startswith('set_input'):
-                input_buffer.append(line.replace('set_input ', '').strip())
-                continue
+        sets = {}
+        node = None
+        node_inputs = None
+        push_buffer = {}
+        lines = string.splitlines()
+        for line_no, line in enumerate(lines, start=1):
+
+            if line_no == len(lines):
+                print('Last line!')
+
+            # Check for and store set commands
+            if line.startswith('set') and node:
+                sets[line.replace('set ', '').strip()] = node
+                if line_no != len(lines):
+                    continue
+
+            # Check for and store push commands
+            elif line.startswith('push'):
+                _, input_idx, node_id = line.strip().split(' ')
+                input_idx = int(input_idx)
+                node_id = node_id.strip('$')
+                push_buffer[input_idx] = node_id
+                if line_no != len(lines):
+                    continue
+
+            # We have a new node. First connect up the old one by going through
+            # the push buffer.
+            if node:
+                if node_inputs != 0:
+                    if push_buffer:
+                        for idx, push in push_buffer.items():
+                            node.set_input(idx, sets[push])
+                        if node_inputs > len(push_buffer):
+                            for i in range(node_inputs):
+                                if i not in push_buffer:
+                                    node.set_input(i, nodes[-1])
+                                    break
+                        push_buffer.clear()
+                    elif nodes:
+                        node.set_input(0, nodes[-1])
+
+                nodes.append(node)
+
+            if line_no == len(lines):
+                return nodes
+
+            # Create node
             node = BaseNode.from_string(line)
-            if not input_buffer and nodes:
-                node.set_input(0, nodes[-1])
-            if push_buffer:
-                push[push_buffer] = node
-            if input_buffer:
-                set_inputs[node] = input_buffer
-            push_buffer = ''
-            input_buffer = []
-            nodes.append(node)
-        for node, inputs in set_inputs.items():
-            for idx, input_id in enumerate(inputs):
-                if input_id == '0':
-                    input_node = None
-                else:
-                    input_node = push[input_id]
-                node.set_input(idx, input_node)
+            node_inputs = BaseNode.inputs_from_string(line)
+
+        return nodes

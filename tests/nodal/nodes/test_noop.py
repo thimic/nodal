@@ -30,7 +30,7 @@ class TestNoOp(TestCase):
 
     def test_name(self):
         noop = nodal.nodes.NoOp()
-        self.assertEqual('NoOp', noop.name)
+        self.assertEqual('NoOp1', noop.name)
         noop.name = 'FooOp'
         self.assertEqual('FooOp', noop.name)
 

@@ -1,7 +1,40 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from collections import defaultdict
+from collections import defaultdict, Counter
+
+from nodal.core.exceptions import CyclicDependencyException
+
+
+def sort(top_nodes: set) -> list:
+    """
+    Topical sort of DAG using Kahn's algorithm.
+
+    Args:
+        top_nodes (set): Set of top nodes with no inputs
+
+    Returns:
+        list: Sorted list of nodes
+
+    """
+    sorted_nodes = []
+    inputs = Counter()
+    while top_nodes:
+        node = top_nodes.pop()
+        sorted_nodes.append(node)
+        for child in node.dependents:
+            print(child)
+            print(inputs)
+            print('---')
+            if child not in inputs:
+                inputs[child] = len(child.inputs)
+            inputs[child] -= 1
+            if not inputs[child]:
+                sorted_nodes.append(child)
+                inputs.pop(child)
+    if inputs:
+        raise CyclicDependencyException('Graph is cyclical!')
+    return sorted_nodes
 
 
 def analyse(top_nodes, parent_node=None, items=None):
