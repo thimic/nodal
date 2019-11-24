@@ -8,12 +8,14 @@ import yaml
 
 from abc import ABCMeta, abstractmethod
 
-from nodal import graph_utils, nodes
+from nodal import graph_utils
 from nodal.core import Callbacks
 from typing import Dict, Set
 
 
 class BaseNode(metaclass=ABCMeta):
+
+    _is_plugin = False
 
     _input_types = {
         0: {'name': '_', 'types': [object], 'default': None}
@@ -112,9 +114,7 @@ class BaseNode(metaclass=ABCMeta):
         type_match = type(self) == type(other)
         if not type_match:
             return False
-        attr_match = all(
-            [self.attrs[a] == other.attrs[a] for a in self.attrs]
-        )
+        attr_match = all([self.attrs[a] == other.attrs[a] for a in self.attrs])
         return attr_match
 
     def delete(self):
@@ -124,6 +124,10 @@ class BaseNode(metaclass=ABCMeta):
     @property
     def class_(self):
         return self.__class__.__name__
+
+    @property
+    def is_plugin(self):
+        return self._is_plugin
 
     @property
     def input_types(self):
