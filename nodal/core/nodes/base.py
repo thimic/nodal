@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import weakref
-import yaml
 
 from abc import ABCMeta, abstractmethod
 

@@ -11,11 +11,6 @@ class Text(BaseNode):
     }
     _output_type = {'default': '', 'type': str}
 
-    def __init__(self, text=''):
-        super(Text, self).__init__()
-        self._attrs['text'] = text
-        self._result = ''
-
     def _execute(self):
         if not self.input(0):
             self._result = self.text
